@@ -53,58 +53,59 @@ begin
 
 
 process(i_A, i_B, i_op)
+    variable A_unsigned_var, B_unsigned_var : unsigned(7 downto 0);
+    variable result_unsigned_var : unsigned(8 downto 0);
+    variable result_final_var : unsigned(7 downto 0);
+    variable carry_out_var : std_logic;
+    variable overflow_var : std_logic;
 begin
-    -- Cast inputs to unsigned
-    A_unsigned <= unsigned(i_A);
-    B_unsigned <= unsigned(i_B);
+    -- Cast inputs immediately
+    A_unsigned_var := unsigned(i_A);
+    B_unsigned_var := unsigned(i_B);
 
     -- Default values
-    result_unsigned <= (others => '0');
-    carry_out <= '0';
-    overflow <= '0';
+    result_unsigned_var := (others => '0');
+    carry_out_var := '0';
+    overflow_var := '0';
 
     case i_op is
         when "000" =>  -- ADD
-            result_unsigned <= ('0' & A_unsigned) + ('0' & B_unsigned);
-            carry_out <= result_unsigned(8);
-            result_final <= result_unsigned(7 downto 0);
-            overflow <= (A_unsigned(7) and B_unsigned(7) and not result_final(7)) or
-                        (not A_unsigned(7) and not B_unsigned(7) and result_final(7));
+            result_unsigned_var := ('0' & A_unsigned_var) + ('0' & B_unsigned_var);
+            carry_out_var := result_unsigned_var(8);
+            result_final_var := result_unsigned_var(7 downto 0);
+            overflow_var := (A_unsigned_var(7) and B_unsigned_var(7) and not result_final_var(7)) or
+                            (not A_unsigned_var(7) and not B_unsigned_var(7) and result_final_var(7));
 
         when "001" =>  -- SUB
-            result_unsigned <= ('0' & A_unsigned) - ('0' & B_unsigned);
-            carry_out <= not result_unsigned(8);  -- Borrow instead of carry
-            result_final <= result_unsigned(7 downto 0);
-            overflow <= (A_unsigned(7) and not B_unsigned(7) and not result_final(7)) or
-                        (not A_unsigned(7) and B_unsigned(7) and result_final(7));
+            result_unsigned_var := ('0' & A_unsigned_var) - ('0' & B_unsigned_var);
+            carry_out_var := not result_unsigned_var(8);  -- Borrow instead of carry
+            result_final_var := result_unsigned_var(7 downto 0);
+            overflow_var := (A_unsigned_var(7) and not B_unsigned_var(7) and not result_final_var(7)) or
+                            (not A_unsigned_var(7) and B_unsigned_var(7) and result_final_var(7));
 
         when "010" =>  -- AND
-            result_final <= A_unsigned and B_unsigned;
-            carry_out <= '0';
-            overflow <= '0';
+            result_final_var := A_unsigned_var and B_unsigned_var;
 
         when "011" =>  -- OR
-            result_final <= A_unsigned or B_unsigned;
-            carry_out <= '0';
-            overflow <= '0';
+            result_final_var := A_unsigned_var or B_unsigned_var;
 
         when others =>
-            result_final <= (others => '0');
-            carry_out <= '0';
-            overflow <= '0';
+            result_final_var := (others => '0');
     end case;
+
+    -- Output assignments
+    result_final <= result_final_var;
+    carry_out    <= carry_out_var;
+    overflow     <= overflow_var;
 end process;
 
-
-
--- Output assignments
+-- Output assignments to ports (outside process)
 o_result <= std_logic_vector(result_final);
 
--- Flags: N (3), Z (2), C (1), V (0)
-o_flags(3) <= result_final(7);                             -- Negative (MSB)
-o_flags(2) <= '1' when result_final = 0 else '0';          -- Zero
-o_flags(1) <= carry_out;                                   -- Carry
-o_flags(0) <= overflow;                                    -- Overflow
+o_flags(3) <= result_final(7);                            
+o_flags(2) <= '1' when result_final = to_unsigned(0, 8) else '0';
+o_flags(1) <= carry_out;                                  
+o_flags(0) <= overflow;
 
 
 
