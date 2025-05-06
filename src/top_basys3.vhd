@@ -67,6 +67,16 @@ component ALU is
 end component;
 
 
+-- Seven-segment decoder
+component sevenseg_decoder is
+    Port (
+        i_Hex   : in  std_logic_vector(3 downto 0);
+        o_seg_n : out std_logic_vector(6 downto 0)
+    );
+end component;
+
+
+
 
 -- Internal wiring signals
 signal w_cycle     : std_logic_vector(3 downto 0);  -- FSM state output
@@ -95,6 +105,13 @@ alu_inst : ALU
         o_result => w_result,
         o_flags  => w_flags
     );
+    
+sevenseg_inst : sevenseg_decoder
+    port map (
+        i_Hex   => w_result(3 downto 0),
+        o_seg_n => seg
+    );
+
 
 
 	
@@ -121,30 +138,6 @@ led(15 downto 8) <= w_result;    -- ALU result
 -- Display result on rightmost 7-seg digit
 -- (just showing lower 4 bits for simplicity here)
 an <= "1110";  -- enable rightmost digit only
-
-process(w_result)
-    variable hex_val : std_logic_vector(3 downto 0);
-begin
-    hex_val := w_result(3 downto 0);
-    case hex_val is
-        when "0000" => seg <= "1000000"; -- 0
-        when "0001" => seg <= "1111001"; -- 1
-        when "0010" => seg <= "0100100"; -- 2
-        when "0011" => seg <= "0110000"; -- 3
-        when "0100" => seg <= "0011001"; -- 4
-        when "0101" => seg <= "0010010"; -- 5
-        when "0110" => seg <= "0000010"; -- 6
-        when "0111" => seg <= "1111000"; -- 7
-        when "1000" => seg <= "0000000"; -- 8
-        when "1001" => seg <= "0010000"; -- 9
-        when "1010" => seg <= "0001000"; -- A
-        when "1011" => seg <= "0000011"; -- b
-        when "1100" => seg <= "1000110"; -- C
-        when "1101" => seg <= "0100001"; -- d
-        when "1110" => seg <= "0000110"; -- E
-        when others => seg <= "0001110"; -- F
-    end case;
-end process;
 
 	
 	
